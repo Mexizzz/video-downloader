@@ -1,0 +1,2 @@
+[FAIL] social-media-video-downloader.p.rapidapi.com/smvd/get/all: 404 - Endpoint '/smvd/get/all' does not exist
+[FAIL] social-media-video-downloader.p.rapidapi.com/smvd/get/instagram: 404 - Endpoint '/smvd/get/instagram' does not exist
