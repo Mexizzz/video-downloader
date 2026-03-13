@@ -49,11 +49,11 @@ export default function DownloaderForm({ defaultPlatform = "Any URL" }: { defaul
         }
     };
 
-    // Build a proxy URL that passes the generic video URL to our new Railway proxy
-    // This circumvents Vercel IP blocks on YouTube/TikTok CDNs
+    // Build a proxy URL that passes the generic video URL to our own API route
+    // Since the Next.js app will run on Railway, its server will fetch from Railway's unblocked IPs
     const getProxyUrl = (format: FormatType, title: string) => {
         const filename = `${title.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 50)}_${format.quality}.${format.format}`;
-        return `https://video-downloader-production-85f5.up.railway.app/download?url=${encodeURIComponent(url)}&quality=${encodeURIComponent(format.quality)}&format=${encodeURIComponent(format.format)}&filename=${encodeURIComponent(filename)}`;
+        return `/api/proxy?cdnUrl=${encodeURIComponent(format.url)}&filename=${encodeURIComponent(filename)}`;
     };
 
     return (
