@@ -53,7 +53,7 @@ export default function DownloaderForm({ defaultPlatform = "Any URL" }: { defaul
     // This circumvents Vercel IP blocks on YouTube/TikTok CDNs
     const getProxyUrl = (format: FormatType, title: string) => {
         const filename = `${title.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 50)}_${format.quality}.${format.format}`;
-        return `https://sparkling-charisma-production-b64c.up.railway.app/download?url=${encodeURIComponent(url)}&quality=${encodeURIComponent(format.quality)}&format=${encodeURIComponent(format.format)}&filename=${encodeURIComponent(filename)}`;
+        return `https://video-downloader-production-85f5.up.railway.app/download?url=${encodeURIComponent(url)}&quality=${encodeURIComponent(format.quality)}&format=${encodeURIComponent(format.format)}&filename=${encodeURIComponent(filename)}`;
     };
 
     return (
