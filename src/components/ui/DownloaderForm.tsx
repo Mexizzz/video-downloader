@@ -24,6 +24,7 @@ export default function DownloaderForm({ defaultPlatform = "Any URL" }: { defaul
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<ResultType | null>(null);
+    const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
 
     const handleDownload = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,11 +50,33 @@ export default function DownloaderForm({ defaultPlatform = "Any URL" }: { defaul
         }
     };
 
-    // Build a proxy URL that passes the generic video URL to our own API route
-    // Since the Next.js app will run on Railway, its server will fetch from Railway's unblocked IPs
-    const getProxyUrl = (format: FormatType, title: string) => {
-        const filename = `${title.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 50)}_${format.quality}.${format.format}`;
-        return `/api/proxy?cdnUrl=${encodeURIComponent(format.url)}&filename=${encodeURIComponent(filename)}`;
+    const handleDirectDownload = async (format: FormatType, idx: number, title: string) => {
+        setDownloadingIdx(idx);
+        try {
+            const filename = `${title.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 50)}_${format.quality}.${format.format}`;
+
+            // Try fetching directly. If CORS fails, it will throw an error
+            const response = await fetch(format.url);
+            if (!response.ok) throw new Error("CORS or Network issue");
+
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+
+        } catch (err) {
+            console.log("Direct download failed, opening in new tab:", err);
+            // Fallback: open in new tab
+            window.open(format.url, "_blank", "noopener,noreferrer");
+        } finally {
+            setDownloadingIdx(null);
+        }
     };
 
     return (
@@ -135,10 +158,11 @@ export default function DownloaderForm({ defaultPlatform = "Any URL" }: { defaul
 
                                 <div className="space-y-3 mt-auto">
                                     {result.formats.map((format: FormatType, idx: number) => (
-                                        <a
+                                        <button
                                             key={idx}
-                                            href={getProxyUrl(format, result.title)}
-                                            className="group flex flex-wrap items-center justify-between gap-4 p-3 rounded-lg bg-zinc-900 border border-white/5 hover:border-primary/50 transition-colors"
+                                            onClick={() => handleDirectDownload(format, idx, result.title)}
+                                            disabled={downloadingIdx !== null}
+                                            className="group flex w-full text-left flex-wrap items-center justify-between gap-4 p-3 rounded-lg bg-zinc-900 border border-white/5 hover:border-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <div className="flex items-center gap-3">
                                                 {format.format === "mp4" ? (
@@ -153,11 +177,11 @@ export default function DownloaderForm({ defaultPlatform = "Any URL" }: { defaul
                                             </div>
                                             <div className="flex items-center gap-4">
                                                 <span className="text-sm text-zinc-500">{format.size}</span>
-                                                <span className="px-4 py-1.5 rounded-md bg-white/5 text-sm font-medium text-white group-hover:bg-primary group-hover:text-white transition-colors">
-                                                    Download
+                                                <span className="px-4 py-1.5 rounded-md bg-white/5 text-sm font-medium text-white group-hover:bg-primary group-hover:text-white transition-colors flex items-center gap-2">
+                                                    {downloadingIdx === idx ? <Loader2 className="animate-spin" size={16} /> : "Download"}
                                                 </span>
                                             </div>
-                                        </a>
+                                        </button>
                                     ))}
                                 </div>
                             </div>
